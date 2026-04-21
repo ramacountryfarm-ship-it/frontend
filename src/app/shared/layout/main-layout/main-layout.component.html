@@ -1,0 +1,13 @@
+<app-toast></app-toast>
+<div class="min-h-screen bg-surface-bg">
+  <!-- Sidebar -->
+  <app-sidebar [isOpen]="sidebarOpen" (toggle)="toggleSidebar()"></app-sidebar>
+
+  <!-- Main Content -->
+  <div class="lg:ml-[272px] min-h-screen flex flex-col">
+    <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+    <main class="flex-1 p-5 lg:p-8">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

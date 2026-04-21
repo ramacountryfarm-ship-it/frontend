@@ -1,0 +1,164 @@
+<div class="max-w-2xl">
+  <button (click)="onCancel()" class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-gray-700 mb-6 transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+    </svg>
+    Back to Sales
+  </button>
+
+  <div class="bg-white rounded-3xl shadow-card p-8">
+    <h2 class="text-lg font-semibold text-ink-dark mb-6">{{ isEdit ? 'Edit Sale' : 'New Sale' }}</h2>
+
+    <div *ngIf="isLoading" class="flex justify-center py-12">
+      <div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div>
+    </div>
+
+    <form *ngIf="!isLoading" [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Date *</label>
+          <input type="date" formControlName="date"
+            [class.border-red-300]="form.get('date')?.invalid && form.get('date')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          <p *ngIf="form.get('date')?.invalid && form.get('date')?.touched" class="text-xs text-[#FF3B30] mt-1">Date is required</p>
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Product Type *</label>
+          <select formControlName="productType"
+            [class.border-red-300]="form.get('productType')?.invalid && form.get('productType')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+            <option *ngFor="let t of productTypes" [value]="t">{{ t }}</option>
+          </select>
+          <p *ngIf="form.get('productType')?.invalid && form.get('productType')?.touched" class="text-xs text-[#FF3B30] mt-1">Product type is required</p>
+        </div>
+      </div>
+
+      <!-- Batch selector for Birds and Meat -->
+      <div *ngIf="showBatch">
+        <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Batch</label>
+        <select formControlName="batchId"
+          class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          <option value="">Select batch</option>
+          <option *ngFor="let b of batches" [value]="b._id">{{ b.batchName }}</option>
+        </select>
+      </div>
+
+      <!-- === EGGS: Quantity + Price per Egg === -->
+      <div *ngIf="isEggs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Quantity (eggs) *</label>
+          <input type="number" formControlName="quantity"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per Egg *</label>
+          <input type="number" step="0.01" formControlName="pricePerUnit"
+            [class.border-red-300]="form.get('pricePerUnit')?.invalid && form.get('pricePerUnit')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          <p *ngIf="form.get('pricePerUnit')?.hasError('required') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Price per unit is required</p>
+          <p *ngIf="form.get('pricePerUnit')?.hasError('min') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Amount</label>
+          <input type="number" formControlName="totalAmount" readonly
+            class="w-full px-4 py-3 rounded-lg border border-surface-muted bg-surface-muted text-sm text-gray-700 font-semibold">
+        </div>
+      </div>
+
+      <!-- === BIRDS: Quantity + Weight(kg) + Price per kg === -->
+      <div *ngIf="isBirds" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">No. of Birds *</label>
+            <input type="number" formControlName="quantity"
+              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          </div>
+          <div>
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Weight (kg) *</label>
+            <input type="number" step="0.01" formControlName="weightKg"
+              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per kg *</label>
+            <input type="number" step="0.01" formControlName="pricePerUnit"
+              [class.border-red-300]="form.get('pricePerUnit')?.invalid && form.get('pricePerUnit')?.touched"
+              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+            <p *ngIf="form.get('pricePerUnit')?.hasError('required') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Price per unit is required</p>
+            <p *ngIf="form.get('pricePerUnit')?.hasError('min') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
+          </div>
+          <div>
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Amount</label>
+            <input type="number" formControlName="totalAmount" readonly
+              class="w-full px-4 py-3 rounded-lg border border-surface-muted bg-surface-muted text-sm text-gray-700 font-semibold">
+          </div>
+        </div>
+      </div>
+
+      <!-- === MEAT: Weight(kg) + Price per kg (no quantity) === -->
+      <div *ngIf="isMeat" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Weight (kg) *</label>
+          <input type="number" step="0.01" formControlName="weightKg"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per kg *</label>
+          <input type="number" step="0.01" formControlName="pricePerUnit"
+            [class.border-red-300]="form.get('pricePerUnit')?.invalid && form.get('pricePerUnit')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          <p *ngIf="form.get('pricePerUnit')?.hasError('required') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Price per unit is required</p>
+          <p *ngIf="form.get('pricePerUnit')?.hasError('min') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Amount</label>
+          <input type="number" formControlName="totalAmount" readonly
+            class="w-full px-4 py-3 rounded-lg border border-surface-muted bg-surface-muted text-sm text-gray-700 font-semibold">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Customer Type</label>
+          <div class="flex gap-2">
+            <select *ngIf="!useCustomType" formControlName="customerType"
+              class="flex-1 px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+              <option value="">Select type</option>
+              <option *ngFor="let ct of customerTypes" [value]="ct">{{ ct }}</option>
+              <option *ngFor="let ct of existingCustomerTypes" [value]="ct">{{ ct }}</option>
+            </select>
+            <input *ngIf="useCustomType" type="text" formControlName="customerType" placeholder="Enter type"
+              class="flex-1 px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+            <button type="button" (click)="useCustomType = !useCustomType"
+              class="px-3 py-2 text-xs font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-surface-muted">
+              {{ useCustomType ? 'List' : 'Custom' }}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Customer Name</label>
+          <input type="text" formControlName="customerName" placeholder="Customer name"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Notes</label>
+        <textarea formControlName="notes" rows="3" placeholder="Additional notes"
+          class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400 resize-none"></textarea>
+      </div>
+
+      <div class="flex items-center gap-3 pt-4">
+        <button type="submit" [disabled]="isSaving || form.invalid"
+          class="px-6 py-2.5 bg-brand-primary text-white text-sm font-medium rounded-2xl shadow-soft hover:bg-[#6b1f18] transition-colors disabled:opacity-50">
+          {{ isSaving ? 'Saving...' : (isEdit ? 'Update Sale' : 'Record Sale') }}
+        </button>
+        <button type="button" (click)="onCancel()"
+          class="px-6 py-2.5 text-sm font-medium text-ink-dark bg-surface-muted rounded-2xl hover:bg-gray-200 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

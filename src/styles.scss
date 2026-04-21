@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-surface-bg text-ink-dark font-sans antialiased;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Focus ring */
+@layer utilities {
+  .apple-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary;
+  }
+}
+
+/* Input overrides */
+input, select, textarea {
+  @apply text-ink-dark;
+}
+
+input::placeholder, textarea::placeholder {
+  @apply text-ink-muted;
+}
+
+/* Smooth transitions */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Table */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Loading spinner */
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Card base utility */
+@layer components {
+  .card {
+    @apply bg-white rounded-3xl shadow-card;
+  }
+  .card-hover {
+    @apply hover:shadow-card-hover transition-shadow duration-200;
+  }
+}
+
+/* Slide-in animation for toasts */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}

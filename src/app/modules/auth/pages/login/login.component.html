@@ -1,0 +1,50 @@
+<div class="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4">
+  <div class="w-full max-w-sm">
+    <!-- Logo Section -->
+    <div class="text-center mb-8">
+      <div class="flex justify-center mb-6">
+        <img src="assets/Logo - maroon_sidebyside.png" alt="Rama Country Farm" class="h-28 w-auto">
+      </div>
+      <p class="text-sm text-[#86868b]">Sign in to your account</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-white rounded-2xl border border-gray-200/60 p-8 shadow-sm">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl">
+          <p class="text-sm text-[#FF3B30]">{{ errorMessage }}</p>
+        </div>
+
+        <!-- Username -->
+        <div class="mb-5">
+          <label for="username" class="block text-[13px] font-medium text-[#1d1d1f] mb-1.5">Username</label>
+          <input type="text" id="username" formControlName="username" placeholder="Enter your username"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-all bg-[#f5f5f7]"
+            [class.border-red-300]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+        </div>
+
+        <!-- Password -->
+        <div class="mb-7">
+          <label for="password" class="block text-[13px] font-medium text-[#1d1d1f] mb-1.5">Password</label>
+          <input type="password" id="password" formControlName="password" placeholder="Enter your password"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-all bg-[#f5f5f7]"
+            [class.border-red-300]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" [disabled]="isLoading"
+          class="w-full py-3 px-4 bg-brand-primary text-white text-sm font-semibold rounded-xl hover:bg-[#6b1f18] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="!isLoading">Sign In</span>
+          <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Signing in...
+          </span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,63 @@
+<div class="space-y-6">
+  <!-- Sub Navigation -->
+  <div class="flex gap-1 bg-[#e8e8ed] p-1 rounded-xl w-fit">
+    <a routerLink="/egg-management/collection" routerLinkActive="bg-white shadow-sm text-[#1d1d1f]"
+       class="px-4 py-2 text-sm font-medium rounded-lg text-[#86868b] transition-all">Collection</a>
+    <a routerLink="/egg-management/damage" routerLinkActive="bg-white shadow-sm text-[#1d1d1f]"
+       class="px-4 py-2 text-sm font-medium rounded-lg text-[#86868b] transition-all">Damage</a>
+    <a routerLink="/egg-management/inventory" routerLinkActive="bg-white shadow-sm text-[#1d1d1f]"
+       class="px-4 py-2 text-sm font-medium rounded-lg text-[#86868b] transition-all">Inventory</a>
+  </div>
+
+  <div>
+    <h2 class="text-lg font-semibold text-[#1d1d1f]">Egg Inventory</h2>
+    <p class="text-sm text-[#86868b] mt-0.5">Current egg stock levels</p>
+  </div>
+
+  <!-- Total Stock Card -->
+  <div class="bg-white rounded-2xl border border-gray-200/60 p-6">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-xl bg-green-50 flex items-center justify-center">
+        <svg class="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"/>
+        </svg>
+      </div>
+      <div>
+        <p class="text-sm text-[#86868b]">Total Egg Stock</p>
+        <p class="text-4xl font-bold text-[#1d1d1f]">{{ inventory.totalStock }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-16">
+    <div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div>
+  </div>
+
+  <!-- Per-Batch Breakdown -->
+  <div *ngIf="!isLoading && inventory.batches && inventory.batches.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div *ngFor="let b of inventory.batches" class="bg-white rounded-2xl border border-gray-200/60 p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="text-sm font-semibold text-[#1d1d1f]">{{ b.batchName }}</h4>
+        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-brand-primary/10 text-brand-primary">{{ b.stock }} eggs</span>
+      </div>
+      <div class="space-y-2">
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-500">Collected</span>
+          <span class="text-gray-700">{{ b.collected }}</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-500">Damaged</span>
+          <span class="text-[#FF3B30]">{{ b.damaged }}</span>
+        </div>
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-500">Sold</span>
+          <span class="text-gray-700">{{ b.sold }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && (!inventory.batches || inventory.batches.length === 0)" class="text-center py-12">
+    <p class="text-sm text-[#86868b]">No inventory data available</p>
+  </div>
+</div>

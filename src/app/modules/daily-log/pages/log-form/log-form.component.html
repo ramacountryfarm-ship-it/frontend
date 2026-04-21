@@ -1,0 +1,92 @@
+<div class="max-w-2xl">
+  <button (click)="onCancel()" class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-gray-700 mb-6 transition-colors">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+    </svg>
+    Back to Daily Log
+  </button>
+
+  <div class="bg-white rounded-3xl shadow-card p-8">
+    <h2 class="text-lg font-semibold text-ink-dark mb-6">{{ isEdit ? 'Edit Log Entry' : 'New Log Entry' }}</h2>
+
+    <div *ngIf="isLoading" class="flex justify-center py-12">
+      <div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div>
+    </div>
+
+    <form *ngIf="!isLoading" [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Date *</label>
+          <input type="date" formControlName="date"
+            [class.border-red-300]="form.get('date')?.invalid && form.get('date')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          <p *ngIf="form.get('date')?.invalid && form.get('date')?.touched" class="text-xs text-[#FF3B30] mt-1">Date is required</p>
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Batch *</label>
+          <select formControlName="batchId"
+            [class.border-red-300]="form.get('batchId')?.invalid && form.get('batchId')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+            <option value="">Select batch</option>
+            <option *ngFor="let batch of batches" [value]="batch._id">{{ batch.batchName }}</option>
+          </select>
+          <p *ngIf="form.get('batchId')?.invalid && form.get('batchId')?.touched" class="text-xs text-[#FF3B30] mt-1">Batch is required</p>
+        </div>
+      </div>
+
+      <div *ngIf="getSelectedBatchLocation()" class="px-4 py-3 bg-brand-primary/10/50 rounded-lg">
+        <span class="text-xs text-gray-500">Location:</span>
+        <span class="text-sm font-medium text-gray-700 ml-1">{{ getSelectedBatchLocation() }}</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Feed Given (kg) *</label>
+          <input type="number" step="0.01" formControlName="feedGivenKg"
+            [class.border-red-300]="form.get('feedGivenKg')?.invalid && form.get('feedGivenKg')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          <p *ngIf="form.get('feedGivenKg')?.hasError('required') && form.get('feedGivenKg')?.touched" class="text-xs text-[#FF3B30] mt-1">Feed given is required</p>
+          <p *ngIf="form.get('feedGivenKg')?.hasError('min') && form.get('feedGivenKg')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Eggs Collected *</label>
+          <input type="number" formControlName="eggsCollected"
+            [class.border-red-300]="form.get('eggsCollected')?.invalid && form.get('eggsCollected')?.touched"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          <p *ngIf="form.get('eggsCollected')?.hasError('required') && form.get('eggsCollected')?.touched" class="text-xs text-[#FF3B30] mt-1">Eggs collected is required</p>
+          <p *ngIf="form.get('eggsCollected')?.hasError('min') && form.get('eggsCollected')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Broken Eggs</label>
+          <input type="number" formControlName="brokenEggs"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Bird Deaths</label>
+          <input type="number" formControlName="birdDeaths"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Notes</label>
+        <textarea formControlName="notes" rows="3" placeholder="Any observations or notes"
+          class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400 resize-none"></textarea>
+      </div>
+
+      <div class="flex items-center gap-3 pt-4">
+        <button type="submit" [disabled]="isSaving || form.invalid"
+          class="px-6 py-2.5 bg-brand-primary text-white text-sm font-medium rounded-2xl shadow-soft hover:bg-[#6b1f18] transition-colors disabled:opacity-50">
+          {{ isSaving ? 'Saving...' : (isEdit ? 'Update Entry' : 'Create Entry') }}
+        </button>
+        <button type="button" (click)="onCancel()"
+          class="px-6 py-2.5 text-sm font-medium text-ink-dark bg-surface-muted rounded-2xl hover:bg-gray-200 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

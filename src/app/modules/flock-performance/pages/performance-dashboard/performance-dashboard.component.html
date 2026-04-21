@@ -1,0 +1,143 @@
+<div class="space-y-8">
+  <!-- Batch Selector -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-[#1d1d1f]">Flock Performance</h2>
+      <p class="text-sm text-[#86868b] mt-0.5">Key performance indicators and predictions</p>
+    </div>
+    <div>
+      <select [(ngModel)]="selectedBatchId" (change)="onBatchChange()"
+        class="px-4 py-2.5 rounded-xl border border-gray-200 bg-[#f5f5f7] text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        <option value="">All Batches</option>
+        <option *ngFor="let b of batches" [value]="b._id">{{ b.batchName }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-16">
+    <div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div>
+  </div>
+
+  <!-- Performance Metric Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-2xl border border-gray-200/60 p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+          <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3C8 3 5 9 5 14a7 7 0 0014 0c0-5-3-11-7-11z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Hen-Day Production</p>
+          <p class="text-2xl font-bold text-[#1d1d1f]">{{ metrics.henDayProduction | number:'1.1-1' }}%</p>
+        </div>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2">
+        <div class="bg-[#FF9500] rounded-full h-2 transition-all" [style.width.%]="metrics.henDayProduction"></div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200/60 p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+          <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Mortality Rate</p>
+          <p class="text-2xl font-bold text-[#1d1d1f]">{{ metrics.mortalityRate | number:'1.1-1' }}%</p>
+        </div>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2">
+        <div class="bg-[#FF3B30] rounded-full h-2 transition-all" [style.width.%]="metrics.mortalityRate"></div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200/60 p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+          <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Feed Efficiency</p>
+          <p class="text-2xl font-bold text-[#1d1d1f]">{{ metrics.feedEfficiency | number:'1.2-2' }}</p>
+        </div>
+      </div>
+      <p class="text-xs text-[#86868b]">kg feed per egg</p>
+    </div>
+  </div>
+
+  <!-- Prediction & Cost Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-2xl border border-gray-200/60 p-6">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-[#1d1d1f]">Egg Production Prediction</h3>
+      </div>
+      <p class="text-4xl font-bold text-[#1d1d1f] mt-4">{{ eggPrediction.predictedEggs }}</p>
+      <p class="text-sm text-[#86868b] mt-1">Predicted eggs for tomorrow</p>
+      <p *ngIf="eggPrediction.confidence" class="text-xs text-gray-400 mt-2">Confidence: {{ eggPrediction.confidence }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-200/60 p-6">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center">
+          <svg class="w-5 h-5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-[#1d1d1f]">Feed Cost Per Egg</h3>
+      </div>
+      <p class="text-4xl font-bold text-[#1d1d1f] mt-4">&#8377;{{ feedCostPerEgg.cost | number:'1.2-2' }}</p>
+      <p class="text-sm text-[#86868b] mt-1">Average feed cost to produce one egg</p>
+    </div>
+  </div>
+
+  <!-- Feed Requirement Planner -->
+  <div class="bg-white rounded-2xl border border-gray-200/60 overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+      <h3 class="text-sm font-semibold text-[#1d1d1f]">Feed Requirement Planner</h3>
+      <p class="text-xs text-gray-500 mt-0.5">Daily feed requirements by batch</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-[#f5f5f7]/50">
+            <th class="text-left text-xs font-semibold text-[#86868b] uppercase tracking-wider px-6 py-3">Batch</th>
+            <th class="text-left text-xs font-semibold text-[#86868b] uppercase tracking-wider px-6 py-3">Birds</th>
+            <th class="text-left text-xs font-semibold text-[#86868b] uppercase tracking-wider px-6 py-3">Feed/Bird (kg)</th>
+            <th class="text-left text-xs font-semibold text-[#86868b] uppercase tracking-wider px-6 py-3">Total Feed (kg)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngFor="let req of feedRequirements" class="hover:bg-[#f5f5f7] transition-colors">
+            <td class="px-6 py-3 text-sm font-medium text-[#1d1d1f]">{{ req.batchName }}</td>
+            <td class="px-6 py-3 text-sm text-[#424245]">{{ req.birds }}</td>
+            <td class="px-6 py-3 text-sm text-[#424245]">{{ req.feedPerBird | number:'1.3-3' }}</td>
+            <td class="px-6 py-3 text-sm font-semibold text-[#1d1d1f]">{{ req.totalFeed | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+        <tfoot *ngIf="feedRequirements.length > 0">
+          <tr class="bg-[#f5f5f7] font-semibold">
+            <td class="px-6 py-3 text-sm text-[#1d1d1f]" colspan="3">Total Daily Feed Required</td>
+            <td class="px-6 py-3 text-sm text-brand-primary">
+              {{ getTotalFeed() | number:'1.2-2' }} kg
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div *ngIf="feedRequirements.length === 0" class="text-center py-12">
+      <p class="text-sm text-[#86868b]">No feed requirement data available</p>
+    </div>
+  </div>
+</div>

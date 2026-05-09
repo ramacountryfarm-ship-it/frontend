@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DailyLogService } from '../../services/daily-log.service';
 import { BatchService } from '../../../batches/services/batch.service';
+import { FeedService } from '../../../feed-management/services/feed.service';
 import { ToastService } from '../../../../shared/services/toast.service';
 
 @Component({
@@ -17,11 +18,19 @@ export class LogFormComponent implements OnInit {
   isLoading = false;
   isSaving = false;
   batches: any[] = [];
+  commercialFeeds: any[] = [];
+  ownMixes: any[] = [];
+
+  readonly feedTimes = ['morning', 'afternoon', 'evening', 'night'];
+  readonly feedTimeLabels: Record<string, string> = {
+    morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', night: 'Night'
+  };
 
   constructor(
     private fb: FormBuilder,
     private logService: DailyLogService,
     private batchService: BatchService,
+    private feedService: FeedService,
     private route: ActivatedRoute,
     private router: Router,
     private toast: ToastService
@@ -30,7 +39,7 @@ export class LogFormComponent implements OnInit {
       date: [new Date().toISOString().substring(0, 10), Validators.required],
       batchId: ['', Validators.required],
       locationId: [''],
-      feedGivenKg: [0, [Validators.required, Validators.min(0)]],
+      feedings: this.fb.array([]),
       eggsCollected: [0, [Validators.required, Validators.min(0)]],
       brokenEggs: [0, [Validators.min(0)]],
       birdDeaths: [0, [Validators.min(0)]],
@@ -38,15 +47,37 @@ export class LogFormComponent implements OnInit {
     });
   }
 
+  get feedingsArray(): FormArray { return this.form.get('feedings') as FormArray; }
+
+  get totalFeedKg(): number {
+    return this.feedingsArray.controls.reduce((sum, ctrl) => {
+      return sum + (parseFloat(ctrl.get('quantityKg')?.value) || 0);
+    }, 0);
+  }
+
+  get usedTimes(): string[] {
+    return this.feedingsArray.controls.map(c => c.get('time')?.value).filter(Boolean);
+  }
+
+  get availableTimesForAdd(): string[] {
+    return this.feedTimes.filter(t => !this.usedTimes.includes(t));
+  }
+
   ngOnInit(): void {
-    this.batchService.getAll().subscribe(data => this.batches = data);
+    Promise.all([
+      this.batchService.getAll().toPromise(),
+      this.feedService.getCommercialFeeds().toPromise(),
+      this.feedService.getOwnFeedMixes().toPromise()
+    ]).then(([batches, commercial, ownMixes]) => {
+      this.batches = batches || [];
+      this.commercialFeeds = commercial || [];
+      this.ownMixes = ownMixes || [];
+    });
 
     this.form.get('batchId')?.valueChanges.subscribe(batchId => {
       const batch = this.batches.find(b => b._id === batchId);
       if (batch) {
-        this.form.patchValue({
-          locationId: batch.location?._id || batch.location || ''
-        });
+        this.form.patchValue({ locationId: batch.location?._id || batch.location || '' });
       }
     });
 
@@ -61,12 +92,14 @@ export class LogFormComponent implements OnInit {
             date: data.date ? data.date.substring(0, 10) : '',
             batchId: data.batch?._id || data.batch || '',
             locationId: data.location?._id || data.location || '',
-            feedGivenKg: data.feedGivenKg || 0,
             eggsCollected: data.eggsCollected || 0,
             brokenEggs: data.brokenEggs || 0,
             birdDeaths: data.birdDeaths || 0,
             notes: data.notes || ''
           });
+          if (Array.isArray(data.feedings) && data.feedings.length > 0) {
+            data.feedings.forEach((f: any) => this.addFeeding(f));
+          }
           this.isLoading = false;
         },
         error: () => { this.isLoading = false; }
@@ -80,6 +113,29 @@ export class LogFormComponent implements OnInit {
     return batch?.location?.name || '';
   }
 
+  addFeeding(existing?: any): void {
+    if (this.feedingsArray.length >= 4) return;
+    const time = existing?.time || this.availableTimesForAdd[0] || 'morning';
+    const feedType = existing?.feedType || 'commercial';
+    const group = this.fb.group({
+      time: [time, Validators.required],
+      feedType: [feedType, Validators.required],
+      commercialFeedId: [existing?.commercialFeed?._id || existing?.commercialFeed || null],
+      ownFeedMixId: [existing?.ownFeedMix?._id || existing?.ownFeedMix || null],
+      quantityKg: [existing?.quantityKg || '', [Validators.required, Validators.min(0.01)]]
+    });
+    this.feedingsArray.push(group);
+  }
+
+  removeFeeding(index: number): void {
+    this.feedingsArray.removeAt(index);
+  }
+
+  setFeedType(index: number, type: string): void {
+    const ctrl = this.feedingsArray.at(index);
+    ctrl.patchValue({ feedType: type, commercialFeedId: null, ownFeedMixId: null });
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -87,9 +143,30 @@ export class LogFormComponent implements OnInit {
       return;
     }
     this.isSaving = true;
+
+    const raw = this.form.value;
+    const feedings = raw.feedings.map((f: any) => ({
+      time: f.time,
+      feedType: f.feedType,
+      commercialFeed: f.feedType === 'commercial' ? f.commercialFeedId : null,
+      ownFeedMix: f.feedType === 'own_mix' ? f.ownFeedMixId : null,
+      quantityKg: parseFloat(f.quantityKg) || 0
+    }));
+
+    const payload = {
+      date: raw.date,
+      batchId: raw.batchId,
+      locationId: raw.locationId,
+      feedings,
+      eggsCollected: raw.eggsCollected,
+      brokenEggs: raw.brokenEggs,
+      birdDeaths: raw.birdDeaths,
+      notes: raw.notes
+    };
+
     const obs = this.isEdit
-      ? this.logService.update(this.logId, this.form.value)
-      : this.logService.create(this.form.value);
+      ? this.logService.update(this.logId, payload)
+      : this.logService.create(payload);
 
     obs.subscribe({
       next: () => {

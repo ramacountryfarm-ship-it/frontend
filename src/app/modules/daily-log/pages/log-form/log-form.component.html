@@ -14,6 +14,8 @@
     </div>
 
     <form *ngIf="!isLoading" [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+      <!-- Date + Batch -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Date *</label>
@@ -34,41 +36,134 @@
         </div>
       </div>
 
-      <div *ngIf="getSelectedBatchLocation()" class="px-4 py-3 bg-brand-primary/10/50 rounded-lg">
+      <div *ngIf="getSelectedBatchLocation()" class="px-4 py-2.5 bg-brand-primary/10 rounded-lg flex items-center gap-2">
+        <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+        </svg>
         <span class="text-xs text-gray-500">Location:</span>
-        <span class="text-sm font-medium text-gray-700 ml-1">{{ getSelectedBatchLocation() }}</span>
+        <span class="text-sm font-medium text-gray-700">{{ getSelectedBatchLocation() }}</span>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Feed Given (kg) *</label>
-          <input type="number" step="0.01" formControlName="feedGivenKg"
-            [class.border-red-300]="form.get('feedGivenKg')?.invalid && form.get('feedGivenKg')?.touched"
-            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-          <p *ngIf="form.get('feedGivenKg')?.hasError('required') && form.get('feedGivenKg')?.touched" class="text-xs text-[#FF3B30] mt-1">Feed given is required</p>
-          <p *ngIf="form.get('feedGivenKg')?.hasError('min') && form.get('feedGivenKg')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
+      <!-- Feed Schedule -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-ink-dark">Feed Schedule</span>
+            <span *ngIf="totalFeedKg > 0"
+              class="px-2 py-0.5 text-[11px] font-semibold text-white bg-brand-primary rounded-full">
+              Total: {{ totalFeedKg | number:'1.0-2' }} kg
+            </span>
+          </div>
+          <button type="button" *ngIf="feedingsArray.length < 4"
+            (click)="addFeeding()"
+            class="inline-flex items-center gap-1 text-xs font-medium text-brand-primary hover:text-[#6b1f18] transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+            Add Feeding
+          </button>
         </div>
+
+        <!-- Empty state -->
+        <div *ngIf="feedingsArray.length === 0"
+          class="flex items-center gap-2 px-4 py-3 bg-surface-muted rounded-xl text-sm text-ink-muted">
+          <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+          </svg>
+          Tap "Add Feeding" to record feed sessions for this day
+        </div>
+
+        <!-- Feeding rows -->
+        <div formArrayName="feedings" class="space-y-3">
+          <div *ngFor="let feeding of feedingsArray.controls; let i = index" [formGroupName]="i"
+            class="p-4 border border-surface-muted rounded-2xl bg-white space-y-3">
+
+            <!-- Time + delete -->
+            <div class="flex items-center gap-3">
+              <select formControlName="time"
+                class="flex-1 px-3 py-2 rounded-xl border border-surface-muted bg-surface-input text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+                <option *ngFor="let t of feedTimes" [value]="t">{{ feedTimeLabels[t] }}</option>
+              </select>
+              <button type="button" (click)="removeFeeding(i)"
+                class="p-1.5 text-[#FF3B30] hover:bg-red-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Feed type toggle -->
+            <div class="flex gap-2">
+              <button type="button"
+                [class]="feeding.get('feedType')?.value === 'commercial' ? 'flex-1 py-2 text-xs font-semibold rounded-xl bg-brand-primary text-white transition-colors' : 'flex-1 py-2 text-xs font-semibold rounded-xl bg-surface-muted text-ink-muted hover:bg-gray-200 transition-colors'"
+                (click)="setFeedType(i, 'commercial')">
+                Commercial Feed
+              </button>
+              <button type="button"
+                [class]="feeding.get('feedType')?.value === 'own_mix' ? 'flex-1 py-2 text-xs font-semibold rounded-xl bg-brand-primary text-white transition-colors' : 'flex-1 py-2 text-xs font-semibold rounded-xl bg-surface-muted text-ink-muted hover:bg-gray-200 transition-colors'"
+                (click)="setFeedType(i, 'own_mix')">
+                Own Mix
+              </button>
+            </div>
+
+            <!-- Feed selector -->
+            <div *ngIf="feeding.get('feedType')?.value === 'commercial'">
+              <select formControlName="commercialFeedId"
+                [class.border-red-300]="feeding.get('commercialFeedId')?.invalid && feeding.get('commercialFeedId')?.touched"
+                class="w-full px-3 py-2.5 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+                <option [value]="null">Select commercial feed</option>
+                <option *ngFor="let f of commercialFeeds" [value]="f._id">{{ f.feedName }} ({{ f.stockKg | number:'1.0-1' }} kg left)</option>
+              </select>
+              <p *ngIf="commercialFeeds.length === 0" class="text-xs text-amber-600 mt-1">
+                No commercial feeds found. Add one in Feed Management first.
+              </p>
+            </div>
+
+            <div *ngIf="feeding.get('feedType')?.value === 'own_mix'">
+              <select formControlName="ownFeedMixId"
+                [class.border-red-300]="feeding.get('ownFeedMixId')?.invalid && feeding.get('ownFeedMixId')?.touched"
+                class="w-full px-3 py-2.5 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+                <option [value]="null">Select own mix</option>
+                <option *ngFor="let m of ownMixes" [value]="m._id">{{ m.mixName }} ({{ m.costPerKg | number:'1.0-0' }} ₹/kg)</option>
+              </select>
+              <p *ngIf="ownMixes.length === 0" class="text-xs text-amber-600 mt-1">
+                No own mixes found. Add one in Feed Management first.
+              </p>
+            </div>
+
+            <!-- Quantity -->
+            <div class="relative">
+              <input type="number" step="0.01" formControlName="quantityKg" placeholder="0.00"
+                [class.border-red-300]="feeding.get('quantityKg')?.invalid && feeding.get('quantityKg')?.touched"
+                class="w-full px-4 py-2.5 pr-12 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-muted">kg</span>
+            </div>
+            <p *ngIf="feeding.get('quantityKg')?.invalid && feeding.get('quantityKg')?.touched"
+              class="text-xs text-[#FF3B30]">Enter a valid quantity</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eggs + Broken + Deaths -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Eggs Collected *</label>
           <input type="number" formControlName="eggsCollected"
             [class.border-red-300]="form.get('eggsCollected')?.invalid && form.get('eggsCollected')?.touched"
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-          <p *ngIf="form.get('eggsCollected')?.hasError('required') && form.get('eggsCollected')?.touched" class="text-xs text-[#FF3B30] mt-1">Eggs collected is required</p>
-          <p *ngIf="form.get('eggsCollected')?.hasError('min') && form.get('eggsCollected')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
         </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Broken Eggs</label>
           <input type="number" formControlName="brokenEggs"
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
         </div>
-        <div>
-          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Bird Deaths</label>
-          <input type="number" formControlName="birdDeaths"
-            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-        </div>
+      </div>
+
+      <div>
+        <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Bird Deaths</label>
+        <input type="number" formControlName="birdDeaths"
+          class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
       </div>
 
       <div>
@@ -87,6 +182,7 @@
           Cancel
         </button>
       </div>
+
     </form>
   </div>
 </div>

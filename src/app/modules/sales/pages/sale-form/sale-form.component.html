@@ -14,26 +14,24 @@
     </div>
 
     <form *ngIf="!isLoading" [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Date + Product Type -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Date *</label>
           <input type="date" formControlName="date"
             [class.border-red-300]="form.get('date')?.invalid && form.get('date')?.touched"
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-          <p *ngIf="form.get('date')?.invalid && form.get('date')?.touched" class="text-xs text-[#FF3B30] mt-1">Date is required</p>
         </div>
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Product Type *</label>
           <select formControlName="productType"
-            [class.border-red-300]="form.get('productType')?.invalid && form.get('productType')?.touched"
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
             <option *ngFor="let t of productTypes" [value]="t">{{ t }}</option>
           </select>
-          <p *ngIf="form.get('productType')?.invalid && form.get('productType')?.touched" class="text-xs text-[#FF3B30] mt-1">Product type is required</p>
         </div>
       </div>
 
-      <!-- Batch selector for Birds and Meat -->
+      <!-- Batch for Birds / Meat -->
       <div *ngIf="showBatch">
         <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Batch</label>
         <select formControlName="batchId"
@@ -43,20 +41,25 @@
         </select>
       </div>
 
-      <!-- === EGGS: Quantity + Price per Egg === -->
+      <!-- Birds slaughtered -->
+      <div *ngIf="isBirds">
+        <label class="block text-[13px] font-medium text-ink-dark mb-1.5">No. of Birds Slaughtered</label>
+        <input type="number" formControlName="birdsSlaughtered" min="0"
+          class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        <p class="text-[11px] text-ink-muted mt-1">Used to update flock count automatically</p>
+      </div>
+
+      <!-- EGGS: Quantity + Price + Total -->
       <div *ngIf="isEggs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Quantity (eggs) *</label>
-          <input type="number" formControlName="quantity"
+          <input type="number" formControlName="quantity" min="0"
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
         </div>
         <div>
-          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per Egg *</label>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per Egg (&#8377;) *</label>
           <input type="number" step="0.01" formControlName="pricePerUnit"
-            [class.border-red-300]="form.get('pricePerUnit')?.invalid && form.get('pricePerUnit')?.touched"
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-          <p *ngIf="form.get('pricePerUnit')?.hasError('required') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Price per unit is required</p>
-          <p *ngIf="form.get('pricePerUnit')?.hasError('min') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
         </div>
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Amount</label>
@@ -65,38 +68,26 @@
         </div>
       </div>
 
-      <!-- === BIRDS: Quantity + Weight(kg) + Price per kg === -->
-      <div *ngIf="isBirds" class="space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">No. of Birds *</label>
-            <input type="number" formControlName="quantity"
-              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-          </div>
-          <div>
-            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Weight (kg) *</label>
-            <input type="number" step="0.01" formControlName="weightKg"
-              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-          </div>
+      <!-- BIRDS: Weight + Price + Total -->
+      <div *ngIf="isBirds" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Weight (kg) *</label>
+          <input type="number" step="0.01" formControlName="weightKg"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per kg *</label>
-            <input type="number" step="0.01" formControlName="pricePerUnit"
-              [class.border-red-300]="form.get('pricePerUnit')?.invalid && form.get('pricePerUnit')?.touched"
-              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-            <p *ngIf="form.get('pricePerUnit')?.hasError('required') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Price per unit is required</p>
-            <p *ngIf="form.get('pricePerUnit')?.hasError('min') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
-          </div>
-          <div>
-            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Amount</label>
-            <input type="number" formControlName="totalAmount" readonly
-              class="w-full px-4 py-3 rounded-lg border border-surface-muted bg-surface-muted text-sm text-gray-700 font-semibold">
-          </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per kg (&#8377;) *</label>
+          <input type="number" step="0.01" formControlName="pricePerUnit"
+            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        </div>
+        <div>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Amount</label>
+          <input type="number" formControlName="totalAmount" readonly
+            class="w-full px-4 py-3 rounded-lg border border-surface-muted bg-surface-muted text-sm text-gray-700 font-semibold">
         </div>
       </div>
 
-      <!-- === MEAT: Weight(kg) + Price per kg (no quantity) === -->
+      <!-- MEAT: Weight + Price + Total -->
       <div *ngIf="isMeat" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Weight (kg) *</label>
@@ -104,12 +95,9 @@
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
         </div>
         <div>
-          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per kg *</label>
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Price per kg (&#8377;) *</label>
           <input type="number" step="0.01" formControlName="pricePerUnit"
-            [class.border-red-300]="form.get('pricePerUnit')?.invalid && form.get('pricePerUnit')?.touched"
             class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-          <p *ngIf="form.get('pricePerUnit')?.hasError('required') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Price per unit is required</p>
-          <p *ngIf="form.get('pricePerUnit')?.hasError('min') && form.get('pricePerUnit')?.touched" class="text-xs text-[#FF3B30] mt-1">Must be at least 0</p>
         </div>
         <div>
           <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Total Amount</label>
@@ -118,31 +106,51 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Customer Type</label>
-          <div class="flex gap-2">
-            <select *ngIf="!useCustomType" formControlName="customerType"
-              class="flex-1 px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
-              <option value="">Select type</option>
-              <option *ngFor="let ct of customerTypes" [value]="ct">{{ ct }}</option>
-              <option *ngFor="let ct of existingCustomerTypes" [value]="ct">{{ ct }}</option>
+      <!-- Customer Section -->
+      <div class="border-t border-surface-muted pt-5">
+        <h3 class="text-[13px] font-semibold text-ink-dark mb-4">Customer</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Customer (from master list)</label>
+            <select formControlName="customerId"
+              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+              <option value="">Walk-in / New</option>
+              <option *ngFor="let c of customers" [value]="c._id">{{ c.name }} ({{ c.type }})</option>
             </select>
-            <input *ngIf="useCustomType" type="text" formControlName="customerType" placeholder="Enter type"
-              class="flex-1 px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
-            <button type="button" (click)="useCustomType = !useCustomType"
-              class="px-3 py-2 text-xs font-medium text-gray-500 border border-gray-300 rounded-lg hover:bg-surface-muted">
-              {{ useCustomType ? 'List' : 'Custom' }}
-            </button>
           </div>
-        </div>
-        <div>
-          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Customer Name</label>
-          <input type="text" formControlName="customerName" placeholder="Customer name"
-            class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+          <div>
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Customer Name</label>
+            <input type="text" formControlName="customerName" placeholder="Name (auto-filled if above selected)"
+              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+          </div>
         </div>
       </div>
 
+      <!-- Payment Section -->
+      <div class="border-t border-surface-muted pt-5">
+        <h3 class="text-[13px] font-semibold text-ink-dark mb-4">Payment</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Payment Status *</label>
+            <select formControlName="paymentStatus"
+              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+              <option *ngFor="let s of paymentStatuses" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+          <div *ngIf="showDueDate">
+            <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Amount Received (&#8377;)</label>
+            <input type="number" formControlName="amountReceived" min="0"
+              class="w-full px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          </div>
+        </div>
+        <div *ngIf="showDueDate" class="mt-4">
+          <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Payment Due Date</label>
+          <input type="date" formControlName="paymentDueDate"
+            class="w-full sm:w-48 px-4 py-3 rounded-xl border border-surface-muted bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+        </div>
+      </div>
+
+      <!-- Notes -->
       <div>
         <label class="block text-[13px] font-medium text-ink-dark mb-1.5">Notes</label>
         <textarea formControlName="notes" rows="3" placeholder="Additional notes"

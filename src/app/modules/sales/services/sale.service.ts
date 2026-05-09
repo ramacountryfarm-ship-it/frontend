@@ -11,9 +11,12 @@ export class SaleService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(productType?: string): Observable<any[]> {
+  getAll(productType?: string, paymentStatus?: string, dateFrom?: string, dateTo?: string): Observable<any[]> {
     let params = new HttpParams();
     if (productType) params = params.set('productType', productType);
+    if (paymentStatus) params = params.set('paymentStatus', paymentStatus);
+    if (dateFrom) params = params.set('dateFrom', dateFrom);
+    if (dateTo) params = params.set('dateTo', dateTo);
     return this.http.get<any[]>(this.apiUrl, { params });
   }
 
@@ -31,6 +34,14 @@ export class SaleService {
 
   delete(id: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  }
+
+  getSummary(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/summary`);
+  }
+
+  markPaid(id: string, amountReceived: number): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/mark-paid`, { amountReceived });
   }
 
   getCustomerTypes(): Observable<string[]> {

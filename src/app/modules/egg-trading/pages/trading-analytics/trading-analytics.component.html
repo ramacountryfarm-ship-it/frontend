@@ -1,0 +1,78 @@
+<div class="space-y-6">
+  <div>
+    <h2 class="text-lg font-semibold text-ink-dark">Trading Analytics</h2>
+    <p class="text-sm text-ink-muted mt-0.5">Monthly P&L, top farmers and customers</p>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-16"><div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div></div>
+
+  <ng-container *ngIf="!isLoading && analytics">
+    <!-- Monthly P&L -->
+    <div class="bg-white rounded-3xl shadow-card p-6">
+      <h3 class="text-[15px] font-semibold text-ink-dark mb-5">Monthly P&L (Last 12 Months)</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-surface-muted">
+            <th class="text-left text-xs text-ink-muted font-semibold pb-3">Month</th>
+            <th class="text-right text-xs text-ink-muted font-semibold pb-3">Cost (&#8377;)</th>
+            <th class="text-right text-xs text-ink-muted font-semibold pb-3">Revenue (&#8377;)</th>
+            <th class="text-right text-xs text-ink-muted font-semibold pb-3">Profit (&#8377;)</th>
+          </tr></thead>
+          <tbody class="divide-y divide-gray-50">
+            <tr *ngFor="let m of analytics.monthlyPnL" class="hover:bg-surface-muted/50">
+              <td class="py-3 font-medium text-ink-dark">{{ m.label }}</td>
+              <td class="py-3 text-right text-[#FF3B30]">{{ m.cost | number }}</td>
+              <td class="py-3 text-right text-[#34C759]">{{ m.revenue | number }}</td>
+              <td class="py-3 text-right font-semibold" [ngClass]="m.profit >= 0 ? 'text-[#34C759]' : 'text-[#FF3B30]'">{{ m.profit | number }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Top Customers & Farmers -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-3xl shadow-card p-6">
+        <h3 class="text-[15px] font-semibold text-ink-dark mb-4">Top 5 Customers by Revenue</h3>
+        <div *ngFor="let c of analytics.topCustomers; let i = index" class="flex items-center justify-between py-2.5 border-b border-surface-muted last:border-0">
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold flex items-center justify-center">{{ i+1 }}</span>
+            <span class="text-sm font-medium text-ink-dark">{{ c.name }}</span>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-semibold text-ink-dark">&#8377;{{ c.totalAmount | number }}</p>
+            <p class="text-xs text-ink-muted">{{ c.totalEggs | number }} eggs</p>
+          </div>
+        </div>
+        <div *ngIf="analytics.topCustomers?.length === 0" class="text-center py-6 text-sm text-ink-muted">No data yet</div>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-card p-6">
+        <h3 class="text-[15px] font-semibold text-ink-dark mb-4">Top 5 Farmers by Supply</h3>
+        <div *ngFor="let f of analytics.topFarmers; let i = index" class="flex items-center justify-between py-2.5 border-b border-surface-muted last:border-0">
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center">{{ i+1 }}</span>
+            <span class="text-sm font-medium text-ink-dark">{{ f.name }}</span>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-semibold text-ink-dark">{{ f.totalEggs | number }} eggs</p>
+            <p class="text-xs text-ink-muted">&#8377;{{ f.totalAmount | number }}</p>
+          </div>
+        </div>
+        <div *ngIf="analytics.topFarmers?.length === 0" class="text-center py-6 text-sm text-ink-muted">No data yet</div>
+      </div>
+    </div>
+
+    <!-- Payment Health -->
+    <div class="bg-white rounded-3xl shadow-card p-6">
+      <h3 class="text-[15px] font-semibold text-ink-dark mb-2">Payment Health</h3>
+      <p class="text-sm text-ink-muted mb-4">Percentage of resale payments received on time</p>
+      <div class="flex items-center gap-4">
+        <div class="flex-1 h-4 rounded-full bg-surface-muted overflow-hidden">
+          <div class="h-full rounded-full transition-all" [style.width]="analytics.paymentHealthPercent + '%'" [ngClass]="analytics.paymentHealthPercent >= 80 ? 'bg-[#34C759]' : analytics.paymentHealthPercent >= 50 ? 'bg-[#FF9500]' : 'bg-[#FF3B30]'"></div>
+        </div>
+        <span class="text-lg font-bold" [ngClass]="analytics.paymentHealthPercent >= 80 ? 'text-[#34C759]' : analytics.paymentHealthPercent >= 50 ? 'text-[#FF9500]' : 'text-[#FF3B30]'">{{ analytics.paymentHealthPercent }}%</span>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -7,10 +7,13 @@ interface DashboardStats {
   eggsToday: number;
   feedUsedToday: string;
   eggStock: number;
+  tradingStock: number;
   profitThisMonth: number;
   allTimeProfit: number;
   allTimeSales: number;
   allTimeInvestments: number;
+  totalPendingReceivables: number;
+  totalPendingPayables: number;
 }
 
 @Component({
@@ -24,10 +27,13 @@ export class DashboardComponent implements OnInit {
     eggsToday: 0,
     feedUsedToday: '0 kg',
     eggStock: 0,
+    tradingStock: 0,
     profitThisMonth: 0,
     allTimeProfit: 0,
     allTimeSales: 0,
-    allTimeInvestments: 0
+    allTimeInvestments: 0,
+    totalPendingReceivables: 0,
+    totalPendingPayables: 0
   };
 
   // Date filter for charts
@@ -225,10 +231,13 @@ export class DashboardComponent implements OnInit {
           eggsToday: data.eggsToday || 0,
           feedUsedToday: (data.feedTodayKg || 0) + ' kg',
           eggStock: data.eggStock || 0,
+          tradingStock: data.tradingStock || 0,
           profitThisMonth: data.profitThisMonth || 0,
           allTimeProfit: data.allTimeProfit || 0,
           allTimeSales: data.allTimeSales || 0,
-          allTimeInvestments: data.allTimeInvestments || 0
+          allTimeInvestments: data.allTimeInvestments || 0,
+          totalPendingReceivables: data.totalPendingReceivables || 0,
+          totalPendingPayables: data.totalPendingPayables || 0
         };
       },
       error: () => {}
@@ -290,11 +299,11 @@ export class DashboardComponent implements OnInit {
           };
         }
         if (data.salesTrend) {
-          this.totalSales7d = data.salesTrend.reduce((sum: number, d: any) => sum + (d.amount || 0), 0);
+          this.totalSales7d = data.salesTrend.reduce((sum: number, d: any) => sum + (d.totalAmount || d.amount || 0), 0);
           this.salesChartData = {
             ...this.salesChartData,
             labels: data.salesTrend.map((d: any) => this.formatDateLabel(d.date)),
-            datasets: [{ ...this.salesChartData.datasets[0], data: data.salesTrend.map((d: any) => d.amount) }]
+            datasets: [{ ...this.salesChartData.datasets[0], data: data.salesTrend.map((d: any) => d.totalAmount || d.amount || 0) }]
           };
         }
       },

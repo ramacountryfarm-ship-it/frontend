@@ -1,0 +1,60 @@
+<div class="space-y-6">
+  <div>
+    <h2 class="text-lg font-semibold text-ink-dark">Pending Payments</h2>
+    <p class="text-sm text-ink-muted mt-0.5">Outstanding payables to farmers and receivables from customers</p>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-16"><div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div></div>
+
+  <div *ngIf="!isLoading" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- You Owe Farmers -->
+    <div class="bg-white rounded-3xl shadow-card overflow-hidden">
+      <div class="px-6 py-4 border-b border-surface-muted flex items-center justify-between">
+        <h3 class="text-[15px] font-semibold text-ink-dark">You Owe Farmers</h3>
+        <span class="text-lg font-bold text-[#FF3B30]">&#8377;{{ data.totalPayables | number }}</span>
+      </div>
+      <div *ngFor="let p of data.payables" class="px-6 py-4 border-b border-surface-muted last:border-0 hover:bg-surface-muted transition-colors">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-semibold text-ink-dark">{{ p.farmer?.name }}</p>
+            <p class="text-xs text-ink-muted mt-0.5">{{ p.farmer?.phone }}</p>
+            <p class="text-xs mt-1" [ngClass]="p.isOverdue ? 'text-[#FF3B30] font-medium' : 'text-ink-muted'">
+              {{ p.paymentDueDate ? 'Due: ' + (p.paymentDueDate | date:'mediumDate') : 'No due date' }}
+              <span *ngIf="p.isOverdue"> · {{ daysOverdue(p.paymentDueDate) }} days overdue</span>
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-bold text-[#FF3B30]">&#8377;{{ p.amountOwed | number }}</p>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="p.paymentStatus === 'Partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'">{{ p.paymentStatus }}</span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="data.payables?.length === 0" class="text-center py-10 text-sm text-ink-muted">No pending payables</div>
+    </div>
+
+    <!-- Customers Owe You -->
+    <div class="bg-white rounded-3xl shadow-card overflow-hidden">
+      <div class="px-6 py-4 border-b border-surface-muted flex items-center justify-between">
+        <h3 class="text-[15px] font-semibold text-ink-dark">Customers Owe You</h3>
+        <span class="text-lg font-bold text-[#FF9500]">&#8377;{{ data.totalReceivables | number }}</span>
+      </div>
+      <div *ngFor="let r of data.receivables" class="px-6 py-4 border-b border-surface-muted last:border-0 hover:bg-surface-muted transition-colors">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-semibold text-ink-dark">{{ r.customer?.name }}</p>
+            <p class="text-xs text-ink-muted mt-0.5">{{ r.customer?.phone }} · {{ r.customer?.address }}</p>
+            <p class="text-xs mt-1" [ngClass]="r.isOverdue ? 'text-[#FF3B30] font-medium' : 'text-ink-muted'">
+              {{ r.paymentDueDate ? 'Due: ' + (r.paymentDueDate | date:'mediumDate') : 'No due date' }}
+              <span *ngIf="r.isOverdue"> · {{ daysOverdue(r.paymentDueDate) }} days overdue</span>
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-bold text-[#FF9500]">&#8377;{{ r.amountOwed | number }}</p>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium" [ngClass]="r.paymentStatus === 'Partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'">{{ r.paymentStatus }}</span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="data.receivables?.length === 0" class="text-center py-10 text-sm text-ink-muted">No pending receivables</div>
+    </div>
+  </div>
+</div>

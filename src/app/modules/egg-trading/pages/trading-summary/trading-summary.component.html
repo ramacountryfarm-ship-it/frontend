@@ -1,0 +1,110 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-ink-dark">Egg Trading</h2>
+      <p class="text-sm text-ink-muted mt-0.5">Country egg procurement & resale overview</p>
+    </div>
+  </div>
+
+  <!-- Quick Nav -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <button (click)="nav('procurement')" class="bg-white rounded-2xl shadow-card p-4 text-left hover:shadow-md transition-shadow">
+      <p class="text-xs font-medium text-ink-muted uppercase tracking-wide">Procurement</p>
+      <p class="text-sm font-semibold text-ink-dark mt-1">Buy from Farmers</p>
+    </button>
+    <button (click)="nav('resale')" class="bg-white rounded-2xl shadow-card p-4 text-left hover:shadow-md transition-shadow">
+      <p class="text-xs font-medium text-ink-muted uppercase tracking-wide">Resale</p>
+      <p class="text-sm font-semibold text-ink-dark mt-1">Sell to Customers</p>
+    </button>
+    <button (click)="nav('pending-payments')" class="bg-white rounded-2xl shadow-card p-4 text-left hover:shadow-md transition-shadow">
+      <p class="text-xs font-medium text-ink-muted uppercase tracking-wide">Pending Payments</p>
+      <p class="text-sm font-semibold text-ink-dark mt-1">View All Due</p>
+    </button>
+    <button (click)="nav('analytics')" class="bg-white rounded-2xl shadow-card p-4 text-left hover:shadow-md transition-shadow">
+      <p class="text-xs font-medium text-ink-muted uppercase tracking-wide">Analytics</p>
+      <p class="text-sm font-semibold text-ink-dark mt-1">Charts & Insights</p>
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-16">
+    <div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div>
+  </div>
+
+  <ng-container *ngIf="!isLoading && summary">
+    <!-- Stock Card -->
+    <div class="rounded-3xl shadow-card p-6"
+      [ngClass]="stockStatus === 'danger' ? 'bg-red-50 border border-red-200' : stockStatus === 'warning' ? 'bg-yellow-50 border border-yellow-200' : 'bg-white'">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Country Egg Stock</p>
+          <p class="text-4xl font-bold mt-1" [ngClass]="stockStatus === 'danger' ? 'text-[#FF3B30]' : stockStatus === 'warning' ? 'text-[#FF9500]' : 'text-ink-dark'">
+            {{ summary.currentStock | number }} <span class="text-base font-medium text-ink-muted">eggs</span>
+          </p>
+        </div>
+        <div class="px-3 py-1 rounded-full text-xs font-semibold"
+          [ngClass]="stockStatus === 'danger' ? 'bg-red-200 text-red-800' : stockStatus === 'warning' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-100 text-green-700'">
+          {{ stockStatus === 'danger' ? 'Stock Error' : stockStatus === 'warning' ? 'Low Stock' : 'Good' }}
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-black/10">
+        <div><p class="text-xs text-ink-muted">Bought</p><p class="font-semibold text-ink-dark">{{ summary.totalBoughtPieces | number }} eggs</p></div>
+        <div><p class="text-xs text-ink-muted">Sold</p><p class="font-semibold text-ink-dark">{{ summary.totalSoldPieces | number }} eggs</p></div>
+        <div><p class="text-xs text-ink-muted">Wasted</p><p class="font-semibold text-[#FF3B30]">{{ summary.totalWastedPieces | number }} eggs</p></div>
+      </div>
+    </div>
+
+    <!-- Financials -->
+    <div class="bg-white rounded-3xl shadow-card p-6">
+      <h3 class="text-[15px] font-semibold text-ink-dark mb-5">Financial Summary</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-xl bg-red-50 p-4">
+          <p class="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Total Procurement Cost</p>
+          <p class="text-2xl font-bold text-[#FF3B30] mt-1">&#8377;{{ summary.totalProcurementCost | number }}</p>
+          <p class="text-xs text-ink-muted mt-1">Avg &#8377;{{ summary.avgBuyPrice }}/egg</p>
+        </div>
+        <div class="rounded-xl bg-green-50 p-4">
+          <p class="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Total Resale Revenue</p>
+          <p class="text-2xl font-bold text-[#34C759] mt-1">&#8377;{{ summary.totalResaleRevenue | number }}</p>
+          <p class="text-xs text-ink-muted mt-1">Avg &#8377;{{ summary.avgSellPrice }}/egg</p>
+        </div>
+        <div class="rounded-xl p-4 border" [ngClass]="summary.netProfit >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'">
+          <p class="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Net Trading Profit</p>
+          <p class="text-2xl font-bold mt-1" [ngClass]="summary.netProfit >= 0 ? 'text-[#34C759]' : 'text-[#FF3B30]'">
+            &#8377;{{ (summary.netProfit >= 0 ? summary.netProfit : -summary.netProfit) | number }}
+          </p>
+          <p class="text-xs text-ink-muted mt-1">Margin: {{ summary.marginPercent }}%</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Payments -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="bg-white rounded-3xl shadow-card p-5 cursor-pointer hover:shadow-md transition-shadow" (click)="nav('pending-payments')">
+        <p class="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">You Owe Farmers</p>
+        <p class="text-2xl font-bold mt-1" [ngClass]="summary.pendingPayables > 0 ? 'text-[#FF3B30]' : 'text-ink-muted'">&#8377;{{ summary.pendingPayables | number }}</p>
+        <p class="text-xs text-ink-muted mt-1">Click to view details</p>
+      </div>
+      <div class="bg-white rounded-3xl shadow-card p-5 cursor-pointer hover:shadow-md transition-shadow" (click)="nav('pending-payments')">
+        <p class="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">Customers Owe You</p>
+        <p class="text-2xl font-bold mt-1" [ngClass]="summary.pendingReceivables > 0 ? 'text-[#FF9500]' : 'text-ink-muted'">&#8377;{{ summary.pendingReceivables | number }}</p>
+        <p class="text-xs text-ink-muted mt-1">Click to view details</p>
+      </div>
+    </div>
+
+    <!-- Sub-section links -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <button (click)="nav('farmers')" class="bg-white rounded-2xl shadow-card p-4 text-left hover:bg-surface-muted transition-colors">
+        <p class="text-xs font-medium text-ink-muted">Farmers</p>
+        <p class="text-sm font-semibold text-ink-dark mt-0.5">Manage Farmers</p>
+      </button>
+      <button (click)="nav('wastage')" class="bg-white rounded-2xl shadow-card p-4 text-left hover:bg-surface-muted transition-colors">
+        <p class="text-xs font-medium text-ink-muted">Wastage</p>
+        <p class="text-sm font-semibold text-ink-dark mt-0.5">Log Broken / Expired</p>
+      </button>
+      <button (click)="nav('analytics')" class="bg-white rounded-2xl shadow-card p-4 text-left hover:bg-surface-muted transition-colors">
+        <p class="text-xs font-medium text-ink-muted">Analytics</p>
+        <p class="text-sm font-semibold text-ink-dark mt-0.5">Monthly P&L Charts</p>
+      </button>
+    </div>
+  </ng-container>
+</div>

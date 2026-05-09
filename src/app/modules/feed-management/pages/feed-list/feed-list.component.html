@@ -1,0 +1,289 @@
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-lg font-semibold text-ink-dark">Feed Management</h2>
+      <p class="text-sm text-ink-muted mt-0.5">Manage commercial feeds and custom feed mixes</p>
+    </div>
+    <button (click)="activeTab === 'commercial' ? onAddCommercial() : onAddMix()"
+      class="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-primary text-white text-sm font-semibold rounded-2xl shadow-soft hover:bg-[#6b1f18] transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+      </svg>
+      {{ activeTab === 'commercial' ? 'Add Feed' : 'New Mix' }}
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 bg-[#e8e8ed] p-1 rounded-xl w-fit">
+    <button (click)="activeTab = 'commercial'; showCommercialForm = false; showMixForm = false"
+      class="px-5 py-2 text-sm font-medium rounded-lg transition-all"
+      [ngClass]="activeTab === 'commercial' ? 'bg-white shadow-sm text-ink-dark' : 'text-ink-muted'">
+      Commercial Feed
+    </button>
+    <button (click)="activeTab = 'ownmix'; showCommercialForm = false; showMixForm = false"
+      class="px-5 py-2 text-sm font-medium rounded-lg transition-all"
+      [ngClass]="activeTab === 'ownmix' ? 'bg-white shadow-sm text-ink-dark' : 'text-ink-muted'">
+      Own Mix
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="flex justify-center py-16">
+    <div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div>
+  </div>
+
+  <!-- ════ COMMERCIAL FEED TAB ════ -->
+  <ng-container *ngIf="!isLoading && activeTab === 'commercial'">
+
+    <!-- Summary -->
+    <div *ngIf="commercialFeeds.length > 0" class="grid grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl shadow-card p-4 text-center">
+        <p class="text-[11px] text-ink-muted uppercase tracking-wide font-medium">Feed Types</p>
+        <p class="text-2xl font-bold text-ink-dark mt-1">{{ commercialFeeds.length }}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-card p-4 text-center">
+        <p class="text-[11px] text-ink-muted uppercase tracking-wide font-medium">Total Stock</p>
+        <p class="text-2xl font-bold text-[#AF52DE] mt-1">{{ totalCommercialStockKg | number:'1.0-1' }} kg</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-card p-4 text-center">
+        <p class="text-[11px] text-ink-muted uppercase tracking-wide font-medium">Stock Value</p>
+        <p class="text-2xl font-bold text-[#34C759] mt-1">&#8377;{{ totalCommercialValue | number:'1.0-0' }}</p>
+      </div>
+    </div>
+
+    <!-- Commercial Form -->
+    <div *ngIf="showCommercialForm" class="bg-white rounded-2xl shadow-card p-6">
+      <h3 class="text-sm font-semibold text-ink-dark mb-4">{{ editingCommercialId ? 'Edit Feed' : 'Add Commercial Feed' }}</h3>
+      <form [formGroup]="commercialForm" (ngSubmit)="onSubmitCommercial()" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Feed Name *</label>
+            <input type="text" formControlName="feedName" placeholder="e.g. Layer Mash"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Brand</label>
+            <input type="text" formControlName="brand" placeholder="e.g. Srinivasa"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Price per kg (&#8377;) *</label>
+            <input type="number" step="0.01" formControlName="pricePerKg" min="0"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Stock (kg)</label>
+            <input type="number" step="0.1" formControlName="stockKg" min="0"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Vendor</label>
+            <select formControlName="vendor"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary">
+              <option value="">No vendor</option>
+              <option *ngFor="let v of vendors" [value]="v._id">{{ v.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Notes</label>
+            <input type="text" formControlName="notes" placeholder="Optional notes"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" [disabled]="isSavingCommercial || commercialForm.invalid"
+            class="px-5 py-2 bg-brand-primary text-white text-sm font-medium rounded-xl hover:bg-[#6b1f18] disabled:opacity-50 transition-colors">
+            {{ isSavingCommercial ? 'Saving...' : (editingCommercialId ? 'Update' : 'Save') }}
+          </button>
+          <button type="button" (click)="showCommercialForm = false"
+            class="px-5 py-2 text-sm font-medium text-ink-muted border border-gray-200 rounded-xl hover:bg-surface-muted transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Commercial Feed Cards -->
+    <div *ngIf="commercialFeeds.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let f of commercialFeeds" class="bg-white rounded-2xl shadow-card p-5">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <h4 class="text-sm font-semibold text-ink-dark">{{ f.feedName }}</h4>
+            <p *ngIf="f.brand" class="text-xs text-ink-muted mt-0.5">{{ f.brand }}</p>
+            <p *ngIf="f.vendor?.name" class="text-xs text-ink-muted mt-0.5">Vendor: {{ f.vendor.name }}</p>
+          </div>
+          <div class="flex gap-1">
+            <button (click)="onEditCommercial(f)" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
+              </svg>
+            </button>
+            <button (click)="onDeleteCommercialClick(f._id)" class="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="space-y-2 mt-3 border-t border-surface-muted pt-3">
+          <div class="flex justify-between text-xs">
+            <span class="text-ink-muted">Price per kg</span>
+            <span class="font-semibold text-ink-dark">&#8377;{{ f.pricePerKg | number:'1.2-2' }}</span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span class="text-ink-muted">Stock</span>
+            <span class="font-semibold" [ngClass]="(f.stockKg || 0) < 10 ? 'text-[#FF3B30]' : (f.stockKg || 0) < 50 ? 'text-[#FF9500]' : 'text-[#34C759]'">
+              {{ f.stockKg | number:'1.1-1' }} kg
+            </span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span class="text-ink-muted">Stock Value</span>
+            <span class="font-semibold text-ink-dark">&#8377;{{ ((f.stockKg || 0) * (f.pricePerKg || 0)) | number:'1.0-0' }}</span>
+          </div>
+        </div>
+        <p *ngIf="f.notes" class="text-[11px] text-ink-muted mt-2 italic">{{ f.notes }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="commercialFeeds.length === 0 && !showCommercialForm" class="text-center py-16 bg-white rounded-2xl shadow-card">
+      <p class="text-sm text-ink-muted">No commercial feeds added yet</p>
+      <button (click)="onAddCommercial()" class="mt-3 text-sm font-medium text-brand-primary hover:underline">Add your first feed</button>
+    </div>
+  </ng-container>
+
+  <!-- ════ OWN MIX TAB ════ -->
+  <ng-container *ngIf="!isLoading && activeTab === 'ownmix'">
+
+    <!-- Own Mix Form -->
+    <div *ngIf="showMixForm" class="bg-white rounded-2xl shadow-card p-6">
+      <h3 class="text-sm font-semibold text-ink-dark mb-4">{{ editingMixId ? 'Edit Mix' : 'Create Feed Mix' }}</h3>
+      <form [formGroup]="mixForm" (ngSubmit)="onSubmitMix()" class="space-y-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Mix Name *</label>
+            <input type="text" formControlName="mixName" placeholder="e.g. Monsoon Mix"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+          </div>
+          <div>
+            <label class="block text-[11px] font-medium text-ink-muted mb-1">Notes</label>
+            <input type="text" formControlName="notes" placeholder="Optional notes"
+              class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+          </div>
+        </div>
+
+        <!-- Ingredients -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <label class="text-[11px] font-semibold text-ink-dark uppercase tracking-wide">Ingredients *</label>
+            <button type="button" (click)="addIngredient()"
+              class="inline-flex items-center gap-1 text-xs font-medium text-brand-primary hover:underline">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+              </svg>
+              Add Ingredient
+            </button>
+          </div>
+          <div class="space-y-2" formArrayName="ingredients">
+            <div *ngFor="let ctrl of ingredients.controls; let i = index" [formGroupName]="i"
+              class="grid grid-cols-12 gap-2 items-center">
+              <div class="col-span-5">
+                <input type="text" formControlName="name" placeholder="Ingredient name (e.g. Mokka)"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+              </div>
+              <div class="col-span-3">
+                <input type="number" step="0.1" formControlName="quantityKg" placeholder="Qty (kg)"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+              </div>
+              <div class="col-span-3">
+                <input type="number" step="0.01" formControlName="pricePerKg" placeholder="₹/kg"
+                  class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-surface-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary placeholder-gray-400">
+              </div>
+              <div class="col-span-1 flex justify-center">
+                <button type="button" (click)="removeIngredient(i)" [disabled]="ingredients.length === 1"
+                  class="p-1 text-red-400 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Cost Summary -->
+        <div class="bg-surface-muted rounded-xl px-4 py-3 flex flex-wrap gap-4 text-sm">
+          <div><span class="text-ink-muted">Total Weight: </span><span class="font-semibold">{{ totalMixWeight | number:'1.1-2' }} kg</span></div>
+          <div><span class="text-ink-muted">Total Cost: </span><span class="font-semibold text-[#FF3B30]">&#8377;{{ totalMixCost | number:'1.0-2' }}</span></div>
+          <div><span class="text-ink-muted">Cost / kg: </span><span class="font-bold text-ink-dark">&#8377;{{ costPerKg | number:'1.2-2' }}</span></div>
+        </div>
+
+        <div class="flex gap-3">
+          <button type="submit" [disabled]="isSavingMix || mixForm.invalid"
+            class="px-5 py-2 bg-brand-primary text-white text-sm font-medium rounded-xl hover:bg-[#6b1f18] disabled:opacity-50 transition-colors">
+            {{ isSavingMix ? 'Saving...' : (editingMixId ? 'Update Mix' : 'Save Mix') }}
+          </button>
+          <button type="button" (click)="showMixForm = false"
+            class="px-5 py-2 text-sm font-medium text-ink-muted border border-gray-200 rounded-xl hover:bg-surface-muted transition-colors">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Own Mix Cards -->
+    <div *ngIf="ownMixes.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div *ngFor="let mix of ownMixes" class="bg-white rounded-2xl shadow-card p-5">
+        <div class="flex items-start justify-between mb-3">
+          <h4 class="text-sm font-semibold text-ink-dark">{{ mix.mixName }}</h4>
+          <div class="flex gap-1 ml-2 flex-shrink-0">
+            <button (click)="onEditMix(mix)" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
+              </svg>
+            </button>
+            <button (click)="onDeleteMixClick(mix._id)" class="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cost badge -->
+        <div class="inline-flex items-center gap-1 bg-ink-dark text-white px-3 py-1 rounded-full text-xs font-bold mb-3">
+          &#8377;{{ mix.costPerKg | number:'1.2-2' }} / kg
+        </div>
+
+        <!-- Ingredients chips -->
+        <div class="flex flex-wrap gap-1.5 mb-3">
+          <span *ngFor="let ing of mix.ingredients" class="px-2.5 py-1 bg-surface-muted text-ink-body text-xs rounded-full">
+            {{ ing.name }} ({{ ing.quantityKg }}kg)
+          </span>
+        </div>
+
+        <!-- Totals -->
+        <div class="flex items-center justify-between text-xs text-ink-muted border-t border-surface-muted pt-3">
+          <span>Total weight: <strong class="text-ink-dark">{{ mix.totalWeightKg | number:'1.1-1' }} kg</strong></span>
+          <span>Total cost: <strong class="text-[#FF3B30]">&#8377;{{ mix.totalCost | number:'1.0-0' }}</strong></span>
+        </div>
+        <p *ngIf="mix.notes" class="text-[11px] text-ink-muted mt-2 italic">{{ mix.notes }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="ownMixes.length === 0 && !showMixForm" class="text-center py-16 bg-white rounded-2xl shadow-card">
+      <p class="text-sm text-ink-muted">No custom feed mixes created yet</p>
+      <button (click)="onAddMix()" class="mt-3 text-sm font-medium text-brand-primary hover:underline">Create your first mix</button>
+    </div>
+  </ng-container>
+</div>
+
+<app-confirm-dialog
+  [visible]="showDeleteCommercialDialog" title="Delete Feed"
+  message="Are you sure you want to delete this feed?"
+  confirmText="Delete" (confirmed)="onDeleteCommercialConfirm()" (cancelled)="showDeleteCommercialDialog = false">
+</app-confirm-dialog>
+
+<app-confirm-dialog
+  [visible]="showDeleteMixDialog" title="Delete Feed Mix"
+  message="Are you sure you want to delete this mix?"
+  confirmText="Delete" (confirmed)="onDeleteMixConfirm()" (cancelled)="showDeleteMixDialog = false">
+</app-confirm-dialog>

@@ -14,24 +14,45 @@ export class SaleListComponent implements OnInit {
   showDeleteDialog = false;
   deleteId = '';
   selectedType = '';
+  selectedPaymentStatus = '';
+  dateFrom = '';
+  dateTo = '';
   currentPage = 1;
   pageSize = 10;
+  summary: any = null;
 
-  productTypes = ['', 'Eggs', 'Birds', 'Meat'];
+  productTypes = ['Eggs', 'Birds', 'Meat'];
+  paymentStatuses = ['Paid', 'Partial', 'Pending'];
 
   constructor(private saleService: SaleService, private router: Router, private toast: ToastService) {}
 
-  ngOnInit(): void { this.loadSales(); }
+  ngOnInit(): void {
+    this.loadSales();
+    this.loadSummary();
+  }
 
   loadSales(): void {
     this.isLoading = true;
-    this.saleService.getAll(this.selectedType).subscribe({
+    this.saleService.getAll(this.selectedType, this.selectedPaymentStatus, this.dateFrom, this.dateTo).subscribe({
       next: (data) => { this.sales = data; this.currentPage = 1; this.isLoading = false; },
       error: () => { this.isLoading = false; }
     });
   }
 
+  loadSummary(): void {
+    this.saleService.getSummary().subscribe({ next: (d) => this.summary = d, error: () => {} });
+  }
+
   onFilter(): void { this.loadSales(); }
+
+  onResetFilter(): void {
+    this.selectedType = '';
+    this.selectedPaymentStatus = '';
+    this.dateFrom = '';
+    this.dateTo = '';
+    this.loadSales();
+  }
+
   onAdd(): void { this.router.navigate(['/sales/new']); }
   onEdit(id: string): void { this.router.navigate(['/sales/edit', id]); }
 
@@ -39,12 +60,19 @@ export class SaleListComponent implements OnInit {
 
   onDeleteConfirm(): void {
     this.saleService.delete(this.deleteId).subscribe({
-      next: () => { this.showDeleteDialog = false; this.toast.success('Sale deleted successfully'); this.loadSales(); },
+      next: () => { this.showDeleteDialog = false; this.toast.success('Sale deleted successfully'); this.loadSales(); this.loadSummary(); },
       error: () => { this.showDeleteDialog = false; this.toast.error('Failed to delete sale'); }
     });
   }
 
   onDeleteCancel(): void { this.showDeleteDialog = false; }
+
+  onMarkPaid(sale: any): void {
+    this.saleService.markPaid(sale._id, sale.totalAmount).subscribe({
+      next: () => { this.toast.success('Marked as paid'); this.loadSales(); this.loadSummary(); },
+      error: () => this.toast.error('Failed to mark paid')
+    });
+  }
 
   get totalPages(): number { return Math.ceil(this.sales.length / this.pageSize); }
 
@@ -54,5 +82,15 @@ export class SaleListComponent implements OnInit {
 
   getTotalRevenue(): number {
     return this.sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+  }
+
+  getPendingRevenue(): number {
+    return this.sales.filter(s => s.paymentStatus !== 'Paid').reduce((sum, s) => sum + ((s.totalAmount || 0) - (s.amountReceived || 0)), 0);
+  }
+
+  getPaymentBadge(status: string): string {
+    if (status === 'Paid') return 'bg-green-100 text-green-700';
+    if (status === 'Partial') return 'bg-amber-100 text-amber-700';
+    return 'bg-red-100 text-red-700';
   }
 }

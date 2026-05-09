@@ -17,16 +17,19 @@ export class SidebarComponent {
 
   menuItems: MenuItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
-    { label: 'Locations', route: '/locations', icon: 'location' },
-    { label: 'Bird Breeds', route: '/bird-breeds', icon: 'breed' },
-    { label: 'Breed Info', route: '/bird-breeds/info', icon: 'info' },
     { label: 'Batches', route: '/batches', icon: 'batch' },
     { label: 'Daily Farm Log', route: '/daily-log', icon: 'log' },
     { label: 'Egg Management', route: '/egg-management', icon: 'egg' },
-    { label: 'Investments', route: '/investments', icon: 'investment' },
+    { label: 'Egg Trading', route: '/egg-trading', icon: 'trading' },
     { label: 'Sales', route: '/sales', icon: 'sale' },
-    { label: 'Vendors', route: '/vendors', icon: 'vendor' },
+    { label: 'Investments', route: '/investments', icon: 'investment' },
+    { label: 'Feed Management', route: '/feed-management', icon: 'feed' },
+    { label: 'Medicine & Supplements', route: '/medicine', icon: 'medicine' },
     { label: 'Vaccination Schedule', route: '/vaccination', icon: 'vaccine' },
+    { label: 'Customers', route: '/customers', icon: 'customer' },
+    { label: 'Vendors', route: '/vendors', icon: 'vendor' },
+    { label: 'Locations', route: '/locations', icon: 'location' },
+    { label: 'Bird Breeds', route: '/bird-breeds', icon: 'breed' },
     { label: 'Flock Performance', route: '/flock-performance', icon: 'performance' },
     { label: 'AI Analytics', route: '/analytics', icon: 'analytics' }
   ];

@@ -1,0 +1,115 @@
+<div class="space-y-6" *ngIf="!isLoading && history">
+  <!-- Back + Edit -->
+  <div class="flex items-center justify-between">
+    <button (click)="onBack()" class="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-gray-700 transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+      </svg>
+      Back to Customers
+    </button>
+    <button (click)="onEdit()" class="px-4 py-2 bg-brand-primary text-white text-sm font-medium rounded-xl hover:bg-[#6b1f18] transition-colors">Edit</button>
+  </div>
+
+  <!-- Customer Info Card -->
+  <div class="bg-white rounded-3xl shadow-card p-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-ink-dark">{{ history.customer?.name }}</h2>
+        <p class="text-sm text-ink-muted mt-1">{{ history.customer?.address }}</p>
+        <p class="text-sm text-ink-muted">{{ history.customer?.phone }}</p>
+      </div>
+      <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary">{{ history.customer?.type }}</span>
+    </div>
+    <!-- Summary Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-surface-muted">
+      <div>
+        <p class="text-[11px] font-medium text-ink-muted uppercase tracking-wide">Farm Sales</p>
+        <p class="text-lg font-bold text-ink-dark mt-1">&#8377;{{ history.totalFarmSales | number }}</p>
+      </div>
+      <div>
+        <p class="text-[11px] font-medium text-ink-muted uppercase tracking-wide">Trading Sales</p>
+        <p class="text-lg font-bold text-ink-dark mt-1">&#8377;{{ history.totalTradingSales | number }}</p>
+      </div>
+      <div>
+        <p class="text-[11px] font-medium text-ink-muted uppercase tracking-wide">Grand Total</p>
+        <p class="text-lg font-bold text-[#34C759] mt-1">&#8377;{{ history.grandTotal | number }}</p>
+      </div>
+      <div>
+        <p class="text-[11px] font-medium text-ink-muted uppercase tracking-wide">Pending</p>
+        <p class="text-lg font-bold mt-1" [ngClass]="history.totalPending > 0 ? 'text-[#FF3B30]' : 'text-ink-muted'">&#8377;{{ history.totalPending | number }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-2">
+    <button (click)="activeTab='farm'" [ngClass]="activeTab==='farm' ? 'bg-brand-primary text-white' : 'bg-white text-ink-body'"
+      class="px-4 py-2 rounded-xl text-sm font-medium shadow-card transition-colors">
+      Farm Sales ({{ history.farmSales?.length || 0 }})
+    </button>
+    <button (click)="activeTab='trading'" [ngClass]="activeTab==='trading' ? 'bg-brand-primary text-white' : 'bg-white text-ink-body'"
+      class="px-4 py-2 rounded-xl text-sm font-medium shadow-card transition-colors">
+      Trading Sales ({{ history.tradingSales?.length || 0 }})
+    </button>
+  </div>
+
+  <!-- Farm Sales Tab -->
+  <div *ngIf="activeTab==='farm'" class="bg-white rounded-3xl shadow-card overflow-hidden">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-surface-muted/60">
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Date</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Product</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Qty</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Amount</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Payment</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <tr *ngFor="let s of history.farmSales" class="hover:bg-surface-muted transition-colors">
+          <td class="px-6 py-4 text-sm text-ink-dark">{{ s.date | date:'mediumDate' }}</td>
+          <td class="px-6 py-4 text-sm text-ink-body">{{ s.productType }}</td>
+          <td class="px-6 py-4 text-sm text-ink-body">{{ s.quantity || s.weightKg }}</td>
+          <td class="px-6 py-4 text-sm font-semibold text-ink-dark">&#8377;{{ s.totalAmount | number }}</td>
+          <td class="px-6 py-4">
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium" [ngClass]="paymentBadgeClass(s.paymentStatus || 'Paid')">{{ s.paymentStatus || 'Paid' }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="history.farmSales?.length === 0" class="text-center py-10 text-sm text-ink-muted">No farm sales for this customer</div>
+  </div>
+
+  <!-- Trading Sales Tab -->
+  <div *ngIf="activeTab==='trading'" class="bg-white rounded-3xl shadow-card overflow-hidden">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-surface-muted/60">
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Date</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Qty</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Unit</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Price/Unit</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Amount</th>
+          <th class="text-left text-xs font-semibold text-ink-muted uppercase tracking-wider px-6 py-4">Payment</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <tr *ngFor="let r of history.tradingSales" class="hover:bg-surface-muted transition-colors">
+          <td class="px-6 py-4 text-sm text-ink-dark">{{ r.date | date:'mediumDate' }}</td>
+          <td class="px-6 py-4 text-sm text-ink-body">{{ r.quantity }}</td>
+          <td class="px-6 py-4 text-sm text-ink-body">{{ r.unit }}</td>
+          <td class="px-6 py-4 text-sm text-ink-body">&#8377;{{ r.pricePerUnit }}</td>
+          <td class="px-6 py-4 text-sm font-semibold text-ink-dark">&#8377;{{ r.totalAmount | number }}</td>
+          <td class="px-6 py-4">
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium" [ngClass]="paymentBadgeClass(r.paymentStatus)">{{ r.paymentStatus }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="history.tradingSales?.length === 0" class="text-center py-10 text-sm text-ink-muted">No trading sales for this customer</div>
+  </div>
+</div>
+
+<div *ngIf="isLoading" class="flex justify-center py-20">
+  <div class="animate-spin w-8 h-8 border-2 border-gray-200 border-t-brand-primary rounded-full"></div>
+</div>

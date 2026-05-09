@@ -19,6 +19,11 @@ export class EggDamageComponent implements OnInit {
   form: FormGroup;
   showDeleteDialog = false;
   deleteId = '';
+  editingId = '';
+
+  filterBatch = '';
+  filterDateFrom = '';
+  filterDateTo = '';
 
   reasons = ['Cracked', 'Thin shell', 'Handling', 'Transport', 'Pest', 'Other'];
 
@@ -30,7 +35,7 @@ export class EggDamageComponent implements OnInit {
     this.form = this.fb.group({
       date: [new Date().toISOString().substring(0, 10), Validators.required],
       batchId: ['', Validators.required],
-      quantity: [0, [Validators.required, Validators.min(1)]],
+      quantity: [1, [Validators.required, Validators.min(1)]],
       reason: ['', Validators.required],
       notes: ['']
     });
@@ -39,6 +44,14 @@ export class EggDamageComponent implements OnInit {
   get totalPages(): number { return Math.ceil(this.damages.length / this.pageSize); }
 
   get paginatedDamages(): any[] { const start = (this.currentPage - 1) * this.pageSize; return this.damages.slice(start, start + this.pageSize); }
+
+  get totalDamaged(): number { return this.damages.reduce((s, d) => s + (d.quantity || 0), 0); }
+
+  get reasonBreakdown(): { reason: string; count: number }[] {
+    const map: Record<string, number> = {};
+    this.damages.forEach(d => { map[d.reason] = (map[d.reason] || 0) + d.quantity; });
+    return Object.entries(map).map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count);
+  }
 
   goToPage(page: number): void { this.currentPage = page; }
 
@@ -49,20 +62,53 @@ export class EggDamageComponent implements OnInit {
 
   loadDamages(): void {
     this.isLoading = true;
-    this.eggService.getDamages().subscribe({
+    this.eggService.getDamages(this.filterBatch, this.filterDateFrom, this.filterDateTo).subscribe({
       next: (data) => { this.damages = data; this.currentPage = 1; this.isLoading = false; },
       error: () => { this.isLoading = false; }
     });
   }
 
+  onFilter(): void { this.loadDamages(); }
+
+  onResetFilter(): void {
+    this.filterBatch = '';
+    this.filterDateFrom = '';
+    this.filterDateTo = '';
+    this.loadDamages();
+  }
+
+  onAdd(): void {
+    this.editingId = '';
+    this.form.reset({ date: new Date().toISOString().substring(0, 10), quantity: 1 });
+    this.showForm = true;
+  }
+
+  onEdit(d: any): void {
+    this.editingId = d._id;
+    this.form.patchValue({
+      date: d.date ? d.date.substring(0, 10) : '',
+      batchId: d.batch?._id || d.batchId || '',
+      quantity: d.quantity,
+      reason: d.reason,
+      notes: d.notes || ''
+    });
+    this.showForm = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   onSubmit(): void {
     if (this.form.invalid) return;
     this.isSaving = true;
-    this.eggService.createDamage(this.form.value).subscribe({
+    const obs = this.editingId
+      ? this.eggService.updateDamage(this.editingId, this.form.value)
+      : this.eggService.createDamage(this.form.value);
+
+    obs.subscribe({
       next: () => {
         this.isSaving = false;
         this.showForm = false;
-        this.form.reset({ date: new Date().toISOString().substring(0, 10) });
+        this.editingId = '';
+        this.form.reset({ date: new Date().toISOString().substring(0, 10), quantity: 1 });
         this.loadDamages();
       },
       error: () => { this.isSaving = false; }

@@ -5,8 +5,9 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          primary: '#81251d',
-          highlight: '#D5B251',
+          primary: '#204d3a',
+          accent: '#f0b322',
+          highlight: '#f0b322',
           pearl: '#F2EEE8'
         },
         surface: {

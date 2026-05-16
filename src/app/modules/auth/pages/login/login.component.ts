@@ -13,6 +13,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   errorMessage = '';
   isLoading = false;
+  year = new Date().getFullYear();
 
   constructor(
     private fb: FormBuilder,

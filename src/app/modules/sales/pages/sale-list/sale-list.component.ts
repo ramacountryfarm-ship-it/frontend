@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { SaleService } from '../../services/sale.service';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-sale-list',
@@ -24,7 +26,7 @@ export class SaleListComponent implements OnInit {
   productTypes = ['Eggs', 'Birds', 'Meat'];
   paymentStatuses = ['Paid', 'Partial', 'Pending'];
 
-  constructor(private saleService: SaleService, private router: Router, private toast: ToastService) {}
+  constructor(private saleService: SaleService, private router: Router, private toast: ToastService, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadSales();
@@ -86,6 +88,21 @@ export class SaleListComponent implements OnInit {
 
   getPendingRevenue(): number {
     return this.sales.filter(s => s.paymentStatus !== 'Paid').reduce((sum, s) => sum + ((s.totalAmount || 0) - (s.amountReceived || 0)), 0);
+  }
+
+  downloadInvoice(saleId: string): void {
+    this.http.get(`${environment.apiUrl}/sales/${saleId}/invoice`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const invoiceNum = 'INV-' + saleId.slice(-6).toUpperCase();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${invoiceNum}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.toast.error('Failed to generate invoice')
+    });
   }
 
   getPaymentBadge(status: string): string {

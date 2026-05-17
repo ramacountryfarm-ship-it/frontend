@@ -1,0 +1,64 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <a routerLink="/reports" class="text-ink-muted hover:text-ink-dark text-sm">← Reports</a>
+      <h1 class="text-2xl font-bold text-ink-dark">Monthly P&L</h1>
+    </div>
+    <select [(ngModel)]="months" (change)="load()" class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-ink-body bg-white">
+      <option [value]="3">Last 3 months</option>
+      <option [value]="6">Last 6 months</option>
+      <option [value]="12">Last 12 months</option>
+    </select>
+  </div>
+
+  <div *ngIf="loading" class="flex justify-center py-16">
+    <div class="animate-spin w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full"></div>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Totals -->
+    <div class="bg-brand-primary rounded-2xl p-6 text-white mb-6 grid grid-cols-3 gap-4">
+      <div>
+        <p class="text-white/60 text-xs mb-1">Total Revenue</p>
+        <p class="text-2xl font-bold">₹{{ inr(totals.revenue || 0) }}</p>
+      </div>
+      <div>
+        <p class="text-white/60 text-xs mb-1">Total Expenses</p>
+        <p class="text-2xl font-bold text-white/80">₹{{ inr(totals.expenses || 0) }}</p>
+      </div>
+      <div>
+        <p class="text-white/60 text-xs mb-1">Net Profit</p>
+        <p class="text-2xl font-bold" [class.text-yellow-300]="totals.profit >= 0" [class.text-red-300]="totals.profit < 0">
+          {{ totals.profit >= 0 ? '+' : '-' }}₹{{ inr(totals.profit || 0) }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Month rows -->
+    <div class="space-y-3">
+      <div *ngFor="let r of rows" class="bg-white rounded-xl shadow-card p-4 flex items-center gap-4"
+           [class.border-l-4]="true"
+           [style.border-left-color]="r.profit >= 0 ? '#204D3A' : '#FF3B30'">
+        <div class="w-20 shrink-0">
+          <p class="font-bold text-ink-dark text-sm">{{ monthLabel(r.month) }}</p>
+        </div>
+        <div class="flex-1 grid grid-cols-3 gap-3">
+          <div class="bg-blue-50 rounded-lg px-3 py-2">
+            <p class="text-[10px] text-blue-500 font-semibold">Revenue</p>
+            <p class="text-blue-700 font-bold text-sm">₹{{ inr(r.revenue) }}</p>
+          </div>
+          <div class="bg-orange-50 rounded-lg px-3 py-2">
+            <p class="text-[10px] text-orange-500 font-semibold">Expenses</p>
+            <p class="text-orange-600 font-bold text-sm">₹{{ inr(r.expenses) }}</p>
+          </div>
+          <div class="rounded-lg px-3 py-2" [class.bg-green-50]="r.profit >= 0" [class.bg-red-50]="r.profit < 0">
+            <p class="text-[10px] font-semibold" [class.text-green-600]="r.profit >= 0" [class.text-red-500]="r.profit < 0">Profit</p>
+            <p class="font-bold text-sm" [class.text-green-700]="r.profit >= 0" [class.text-red-600]="r.profit < 0">
+              {{ r.profit >= 0 ? '+' : '-' }}₹{{ inr(r.profit) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

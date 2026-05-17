@@ -30,6 +30,7 @@ export class SidebarComponent {
     { label: 'Vendors', route: '/vendors', icon: 'vendor' },
     { label: 'Locations', route: '/locations', icon: 'location' },
     { label: 'Bird Breeds', route: '/bird-breeds', icon: 'breed' },
+    { label: 'Reports', route: '/reports', icon: 'reports' },
     { label: 'Flock Performance', route: '/flock-performance', icon: 'performance' },
     { label: 'AI Analytics', route: '/analytics', icon: 'analytics' }
   ];

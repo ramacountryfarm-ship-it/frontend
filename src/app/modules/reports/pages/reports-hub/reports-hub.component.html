@@ -1,0 +1,21 @@
+<div class="p-6">
+  <h1 class="text-2xl font-bold text-ink-dark mb-6">Reports</h1>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <a
+      *ngFor="let c of cards"
+      [routerLink]="c.link"
+      class="block bg-white rounded-2xl shadow-card p-5 hover:shadow-soft transition-shadow cursor-pointer border border-gray-100"
+    >
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" [style.background]="c.color + '18'">
+          {{ c.icon }}
+        </div>
+        <div>
+          <p class="font-bold text-ink-dark text-base">{{ c.title }}</p>
+          <p class="text-ink-muted text-sm mt-0.5">{{ c.subtitle }}</p>
+        </div>
+        <div class="ml-auto text-gray-300">›</div>
+      </div>
+    </a>
+  </div>
+</div>

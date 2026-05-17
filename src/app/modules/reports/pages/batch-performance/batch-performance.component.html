@@ -1,0 +1,44 @@
+<div class="p-6">
+  <div class="flex items-center gap-3 mb-6">
+    <a routerLink="/reports" class="text-ink-muted hover:text-ink-dark text-sm">← Reports</a>
+    <h1 class="text-2xl font-bold text-ink-dark">Batch Performance</h1>
+  </div>
+
+  <div *ngIf="loading" class="flex justify-center py-16">
+    <div class="animate-spin w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full"></div>
+  </div>
+
+  <div *ngIf="!loading && !rows.length" class="text-center py-16 text-ink-muted">No batch data found.</div>
+
+  <div *ngIf="!loading" class="space-y-4">
+    <div *ngFor="let r of rows; let i = index" class="bg-white rounded-2xl shadow-card p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-lg bg-brand-primary/10 text-brand-primary font-bold text-sm flex items-center justify-center">#{{ i + 1 }}</span>
+          <p class="font-bold text-ink-dark text-lg">{{ r.batchName }}</p>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-surface-muted text-ink-muted capitalize">{{ r.livestockType }}</span>
+        </div>
+        <span *ngIf="r.fcr" class="text-xs font-bold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700">FCR {{ r.fcr }} kg/dz</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-yellow-50 rounded-xl p-3 text-center">
+          <p class="text-xs text-yellow-600 font-semibold">Total Eggs</p>
+          <p class="text-yellow-700 font-bold text-lg">{{ r.totalEggs | number }}</p>
+        </div>
+        <div class="bg-green-50 rounded-xl p-3 text-center">
+          <p class="text-xs text-green-600 font-semibold">Feed Used</p>
+          <p class="text-green-700 font-bold text-lg">{{ r.totalFeedKg }} kg</p>
+        </div>
+        <div class="rounded-xl p-3 text-center" [class.bg-red-50]="r.totalDeaths > 0" [class.bg-gray-50]="r.totalDeaths === 0">
+          <p class="text-xs font-semibold" [class.text-red-500]="r.totalDeaths > 0" [class.text-gray-400]="r.totalDeaths === 0">Deaths</p>
+          <p class="font-bold text-lg" [class.text-red-600]="r.totalDeaths > 0" [class.text-gray-400]="r.totalDeaths === 0">{{ r.totalDeaths }}</p>
+        </div>
+        <div class="bg-blue-50 rounded-xl p-3 text-center">
+          <p class="text-xs text-blue-500 font-semibold">Revenue</p>
+          <p class="text-blue-700 font-bold text-lg">₹{{ inr(r.revenue) }}</p>
+        </div>
+      </div>
+      <p class="text-xs text-ink-muted mt-3">{{ r.daysLogged }} days logged • {{ r.initialBirdCount }} birds initial</p>
+    </div>
+  </div>
+</div>

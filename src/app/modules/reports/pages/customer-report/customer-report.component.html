@@ -1,0 +1,61 @@
+<div class="p-6">
+  <div class="flex items-center gap-3 mb-6">
+    <a routerLink="/reports" class="text-ink-muted hover:text-ink-dark text-sm">← Reports</a>
+    <h1 class="text-2xl font-bold text-ink-dark">Customer Report</h1>
+  </div>
+
+  <div *ngIf="loading" class="flex justify-center py-16">
+    <div class="animate-spin w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full"></div>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Totals banner -->
+    <div class="rounded-2xl p-5 mb-6 grid grid-cols-4 gap-4 text-white" style="background: linear-gradient(135deg, #5856D6, #007AFF)">
+      <div class="text-center">
+        <p class="text-white/60 text-xs">Total Revenue</p>
+        <p class="text-xl font-bold">₹{{ inr(totals.revenue) }}</p>
+      </div>
+      <div class="text-center">
+        <p class="text-white/60 text-xs">Collected</p>
+        <p class="text-xl font-bold">₹{{ inr(totals.received) }}</p>
+      </div>
+      <div class="text-center">
+        <p class="text-white/60 text-xs">Pending</p>
+        <p class="text-xl font-bold" [class.text-red-300]="totals.pending > 0">₹{{ inr(totals.pending) }}</p>
+      </div>
+      <div class="text-center">
+        <p class="text-white/60 text-xs">Total Orders</p>
+        <p class="text-xl font-bold">{{ totals.orders }}</p>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="flex justify-end mb-4">
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+        <input type="checkbox" [(ngModel)]="showPendingOnly" class="w-4 h-4 accent-red-500">
+        <span class="text-sm text-ink-muted">Show pending only</span>
+      </label>
+    </div>
+
+    <!-- Customer list -->
+    <div class="space-y-3">
+      <div *ngFor="let r of visible; let i = index" class="bg-white rounded-xl shadow-card p-4 flex items-center gap-4"
+           [class.border]="r.pending > 0" [class.border-red-200]="r.pending > 0">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-base shrink-0"
+             style="background: #5856D6">
+          {{ initial(r.name) }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-ink-dark truncate">{{ r.name }}</p>
+          <p class="text-xs text-ink-muted">{{ r.orders }} orders • ₹{{ inr(r.revenue) }} total</p>
+        </div>
+        <div *ngIf="r.pending > 0" class="text-right shrink-0">
+          <p class="text-xs text-red-400">Pending</p>
+          <p class="font-bold text-red-600">₹{{ inr(r.pending) }}</p>
+        </div>
+        <div *ngIf="r.pending === 0" class="text-green-500 text-lg shrink-0">✓</div>
+      </div>
+      <div *ngIf="visible.length === 0" class="text-center py-8 text-ink-muted">No customers found.</div>
+    </div>
+  </div>
+</div>
